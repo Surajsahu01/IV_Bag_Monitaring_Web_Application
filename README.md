@@ -76,8 +76,7 @@ npm install
 node server.js
 
 
-### 3. Frontend (React + Material UI)
-```bash
+Frontend (React + Material UI)
 
 git clone https://github.com/your-username/iv-monitoring-frontend.git
 cd iv-monitoring-frontend
