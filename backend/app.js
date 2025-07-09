@@ -7,8 +7,9 @@ import adminRoutes from './routes/adminRoutes.js';
 import nurseRoutes from './routes/nurseRoutes.js';
 import ivDataRoutes from './routes/ivDataRoutes.js';
 import roomRoutes from './routes/roomRoutes.js';
+import serverless from 'serverless-http';
 
-export const app = express();
+const app = express();
 dotenv.config();
 
 
@@ -29,3 +30,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/nurse', nurseRoutes);
 app.use('/api/iv-data', ivDataRoutes)
 app.use('/api/room', roomRoutes)
+
+
+
+module.exports = serverless(app);
