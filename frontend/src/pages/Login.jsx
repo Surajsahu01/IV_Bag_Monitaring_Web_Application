@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../Utils/utils';
-import loginImage from '../assets/Login-bro.svg'
+import loginImage from '../assets/login-bro.svg'
 import { useSnackbar } from '../context/SnackbarContext';
 
 
