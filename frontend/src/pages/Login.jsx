@@ -37,7 +37,7 @@ const Login = () => {
       } catch (err) {
         setError(err.response?.data?.message || 'Login failed'); 
         console.error('Login error:', err);
-        showSnackbar(err.response?.data?.message, 'error');
+        showSnackbar(err.response?.data?.message || 'Login failed', 'error');
       }
     };
 
