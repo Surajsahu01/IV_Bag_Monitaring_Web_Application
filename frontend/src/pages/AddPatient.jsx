@@ -108,7 +108,7 @@ const AddPatient = () => {
         setMessage(data.message || 'Patient added successfully');
      
         showSnackbar(data.message || 'Patient added successfully', 'success');
-        console.log("Patient added successfully:", data);
+        // console.log("Patient added successfully:", data);
         
         // Reset form fields
         setForm({
