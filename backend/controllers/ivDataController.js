@@ -2,48 +2,9 @@ import { io } from "../index.js";
 import IVData from "../model/IVData.js";
 import IVSensor from "../model/IVSensor.js";
 import Patient from "../model/Patient.js";
+import nodemailer from "nodemailer";
 
 
-// export const receiveSensorData = async (req, res) => {
-//   try {
-//     const { sensorId, weight, dropCount } = req.body;
-
-//     if (!sensorId || weight === undefined || dropCount === undefined) {
-//       return res.status(400).json({ message: 'Missing required fields' });
-//     }
-
-//     // Find patient using this sensor
-//     const patient = await Patient.findOne({ ivsensor: sensorId });
-
-//     if (!patient) {
-//       return res.status(404).json({ message: 'No patient linked with this sensor' });
-//     }
-
-//     // Save data
-//     const ivData = await IVData.create({
-//       patient: patient._id,
-//       weight,
-//       dropCount,
-//       timestamp: new Date()
-//     });
-
-//     // Emit live update via socket
-//     if (req.io) {
-//       req.io.emit('iv-data', {
-//         patientId: patient._id,
-//         patientName: patient.name,
-//         weight,
-//         dropCount,
-//         timestamp: ivData.timestamp
-//       });
-//     }
-
-//     res.status(201).json({ message: 'Data saved', data: ivData });
-//   } catch (error) {
-//     console.error('receiveSensorData Error:', error);
-//     res.status(500).json({ message: 'Server error saving IV data' });
-//   }
-// };
 
 
 export const receiveSensorData = async (req, res) => {
@@ -62,7 +23,12 @@ export const receiveSensorData = async (req, res) => {
     }
 
     // Step 2: Find patient linked to this sensor
-    const patient = await Patient.findOne({isDischarged: false, ivBottleHistory: { $elemMatch: { ivsensor: sensor._id } } });
+    const patient = await Patient.findOne({
+      isDischarged: false, 
+      ivBottleHistory: {
+        $elemMatch: { ivsensor: sensor._id }
+      } 
+    }).populate('nurse');
 
     if (!patient) {
       return res.status(404).json({ message: 'No patient linked with this sensor' });
@@ -96,6 +62,20 @@ export const receiveSensorData = async (req, res) => {
       dropCount,
       timestamp: ivData.timestamp
     });
+
+
+    // Step 5: Check and send email alert if IV below 50ml
+    if (weight < 50 && patient.nurse?.email) {
+      await sendNurseEmailAlert({
+        nurseEmail: patient.nurse.email,
+        patientName: patient.name,
+        sensorId: sensorId,
+        weight,
+        dropCount,
+        roomNumber: patient.roomNumber,
+        bedNumber: patient.bedNumber
+      });
+    }
 
     
     res.status(201).json({ message: 'Data saved', data: ivData });
@@ -158,5 +138,39 @@ export const getAllLatestIVData = async (req, res) => {
   } catch (error) {
     console.error('getAllLatestIVData Error:', error);
     res.status(500).json({ message: 'Server error fetching latest data' });
+  }
+};
+
+
+
+const sendNurseEmailAlert = async ({ nurseEmail, patientName, sensorId, weight, dropCount, roomNumber, bedNumber }) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    const mailOptions = {
+      from: `"IV Monitoring System" <${process.env.EMAIL_USER}>`,
+      to: nurseEmail,
+      subject: `⚠️ Low IV Fluid Alert for ${patientName}`,
+      html: `
+        <h3>🚨 IV Alert</h3>
+        <p><strong>Patient:</strong> ${patientName}</p>
+        <p><strong>Sensor ID:</strong> ${sensorId}</p>
+        <p><strong>Room:</strong> ${roomNumber || '-'} | <strong>Bed:</strong> ${bedNumber || '-'}</p>
+        <p><strong>Current Fluid Weight:</strong> ${weight} ml</p>
+        <p><strong>Drop Count:</strong> ${dropCount}</p>
+        <p style="color:red;"><strong>⚠ Please check the IV bag immediately.</strong></p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`[Email Sent] To nurse: ${nurseEmail}`);
+  } catch (error) {
+    console.error('Email alert failed:', error.message);
   }
 };
