@@ -84,7 +84,7 @@ const NurseDashbord = () => {
         {/* Dashboard Content */}
         <div className="pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 w-full">
           <h1 className="text-2xl sm:text-3xl font-bold text-blue-800 text-center mb-10">
-            Welcome, {user?.name}
+            Welcome {user?.name}
           </h1>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
