@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import { useSnackbar } from '../context/SnackbarContext';
 import { Menu } from 'lucide-react';
+import { CircularProgress } from '@mui/material';
 
 const AllNurse = () => {
     const [nurses, setNurses] = useState([]);
@@ -77,7 +78,9 @@ const AllNurse = () => {
           <h1 className="text-2xl font-bold text-blue-700 mb-6">All Registered Nurses</h1>
 
           {loading ? (
-            <p className="text-gray-500">Loading...</p>
+            <div className="flex justify-center mt-20">
+                          <CircularProgress />
+                        </div>
           ) : message ? (
             <p className="text-red-600">{message}</p>
           ) : nurses.length === 0 ? (
