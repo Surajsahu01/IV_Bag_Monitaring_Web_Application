@@ -63,7 +63,7 @@ const IVVisual = () => {
 
         <div
           className={`absolute bottom-25 left-1/2 transform -translate-x-1/2 font-bold text-xl ${
-            weight < 100 ? 'text-red-600' : 'text-blue-100'
+            weight < 100 ? 'text-red-600' : 'text-green-400'
           }`}
         >
           {Math.round(weight)} mL
