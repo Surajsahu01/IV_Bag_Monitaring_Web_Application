@@ -6,6 +6,7 @@ import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import { useSnackbar } from '../context/SnackbarContext';
 import { Menu } from 'lucide-react';
+import { CircularProgress } from '@mui/material';
 
 const PatientHistory = () => {
     const { id } = useParams(); // patient ID from URL
@@ -83,7 +84,9 @@ const PatientHistory = () => {
           <h1 className="text-3xl font-bold text-blue-700 mb-4">Patient IV History</h1>
 
           {loading ? (
-            <p>Loading...</p>
+            <div className="flex justify-center mt-20">
+                          <CircularProgress />
+                        </div>
           ) : errorMsg ? (
             <p className="text-red-500">{errorMsg}</p>
           ) : (
