@@ -7,6 +7,7 @@ import Navbar from '../components/Navbar';
 import { Button } from '@mui/material';
 import { useSnackbar } from '../context/SnackbarContext';
 import { Menu } from 'lucide-react';
+import { CircularProgress } from '@mui/material';
 
 
 const AllPatients = () => {
@@ -108,7 +109,9 @@ const AllPatients = () => {
           <h2 className="text-2xl font-bold mb-6 text-center text-blue-800">All Patients</h2>
 
           {loading ? (
-            <p className="text-gray-600">Loading...</p>
+            <div className="flex justify-center mt-20">
+                          <CircularProgress />
+                        </div>
           ) : errorMsg ? (
             <p className="text-red-600">{errorMsg}</p>
           ) : patients.length === 0 ? (
