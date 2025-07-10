@@ -5,6 +5,7 @@ import Sidebar from '../components/Sidebar';
 import Navbar from '../components/Navbar';
 import { API_BASE_URL } from '../Utils/utils';
 import { Menu } from 'lucide-react';
+import { CircularProgress } from '@mui/material';
 
 const PatientDetails = () => {
   const { id } = useParams();
@@ -29,7 +30,9 @@ const PatientDetails = () => {
     fetchDetails();
   }, [id]);
 
-  if (!patient) return <div className="ml-64 mt-24 text-center">Loading...</div>;
+  if (!patient) return <div className="flex justify-center mt-20">
+                          <CircularProgress />
+                        </div>;
 
   return (
      <div className="flex bg-gray-100 min-h-screen overflow-x-hidden">
