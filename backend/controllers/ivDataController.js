@@ -15,26 +15,24 @@ export const receiveSensorData = async (req, res) => {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Step 1: Find IVSensor by sensorId
     const sensor = await IVSensor.findOne({ sensorId });
-
     if (!sensor) {
       return res.status(404).json({ message: 'Sensor not registered' });
     }
 
-    // Step 2: Find patient linked to this sensor
+    // Find the active patient and the index of the current IV session (bottle)
     const patient = await Patient.findOne({
-      isDischarged: false, 
+      isDischarged: false,
       ivBottleHistory: {
         $elemMatch: { ivsensor: sensor._id }
-      } 
+      }
     }).populate('nurse');
 
     if (!patient) {
       return res.status(404).json({ message: 'No patient linked with this sensor' });
     }
 
-    // Step 3: Save IV data
+    // Save IV data
     const ivData = await IVData.create({
       patient: patient._id,
       weight,
@@ -42,19 +40,7 @@ export const receiveSensorData = async (req, res) => {
       timestamp: new Date()
     });
 
-    // Step 4: Emit real-time update via socket.io (optional)
-    // if (req.io) {
-    //   console.log('📡 Emitting iv-Data to socket clients...');
-    //   req.io.emit('iv-Data', {
-    //     patientId: patient._id.toString(),
-    //     patientName: patient.name,
-    //     weight,
-    //     dropCount,
-    //     timestamp: ivData.timestamp
-    //   });
-    // }
-
-    // Emit real-time update via socket.io
+    // Emit real-time data
     io.emit('iv-Data', {
       patientId: patient._id.toString(),
       patientName: patient.name,
@@ -63,21 +49,31 @@ export const receiveSensorData = async (req, res) => {
       timestamp: ivData.timestamp
     });
 
+    // 🔍 Find the matching bottle history entry
+    const bottleIndex = patient.ivBottleHistory.findIndex(h => h.ivsensor.toString() === sensor._id.toString());
 
-    // Step 5: Check and send email alert if IV below 50ml
-    if (weight < 50 && patient.nurse?.email) {
-      await sendNurseEmailAlert({
-        nurseEmail: patient.nurse.email,
-        patientName: patient.name,
-        sensorId: sensorId,
-        weight,
-        dropCount,
-        roomNumber: patient.roomNumber,
-        bedNumber: patient.bedNumber
-      });
+    if (bottleIndex !== -1) {
+      const bottle = patient.ivBottleHistory[bottleIndex];
+
+      // ✅ If alert not sent and weight < 50, send alert
+      if (!bottle.alertSent && weight < 50 && patient.nurse?.email) {
+        await sendNurseEmailAlert({
+          nurseEmail: patient.nurse.email,
+          patientName: patient.name,
+          sensorId: sensorId,
+          weight,
+          dropCount,
+          roomNumber: patient.roomNumber,
+          bedNumber: patient.bedNumber
+        });
+
+        // 🔒 Mark alert as sent
+        patient.ivBottleHistory[bottleIndex].alertSent = true;
+        await patient.save();
+        console.log(`[Alert] Email sent to ${patient.nurse.email} for ${patient.name}`);
+      }
     }
 
-    
     res.status(201).json({ message: 'Data saved', data: ivData });
 
   } catch (error) {
