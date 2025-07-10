@@ -24,6 +24,10 @@ const ivBottleHistorySchema = new mongoose.Schema(
     note: {
       type: String,
       default: ''
+    },
+    alertSent: {
+      type: Boolean,
+      default: false
     }
   },
   {
